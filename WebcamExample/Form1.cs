@@ -26,15 +26,27 @@ namespace WebcamExample
 
         private void button1_Click(object sender, EventArgs e)
         {
+            Stop();
+
             var videoDevice = GetVideoDevice();
             if (videoDevice == null)
                 return;
             _videoSource = new VideoCaptureDevice(videoDevice.MonikerString);
 
             _videoSource.VideoResolution = _videoSource.VideoCapabilities[0];
+            FormSelectResolution F = new FormSelectResolution(_videoSource.VideoCapabilities);
+            if (F.ShowDialog() == DialogResult.OK
+                && null != F.Result)
+            {
+                //MessageBox.Show(F.Result.ToString());
+                _videoSource.VideoResolution = F.Result;
+            }
+
 
             _videoSource.NewFrame += VideoSource_NewFrame;
             _videoSource.Start();
+
+            pictureBox1.Show();
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -54,6 +66,8 @@ namespace WebcamExample
 
         private void Stop()
         {
+            if (!IsControlDown())
+                pictureBox1.Hide();
             if (_videoSource != null && _videoSource.IsRunning)
             {
                 _videoSource.SignalToStop();
@@ -103,6 +117,16 @@ namespace WebcamExample
                 Console.WriteLine($"{index++}\t{v.FrameSize}\t{v.AverageFrameRate}\t{v.MaximumFrameRate}\t{v.BitCount}");
             }
             return videoCapabilities[0];
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            GC.Collect(0, GCCollectionMode.Forced);
+        }
+
+        public static bool IsControlDown()
+        {
+            return (Control.ModifierKeys & Keys.Control) == Keys.Control;
         }
     }
 }
